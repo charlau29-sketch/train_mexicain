@@ -1,0 +1,710 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>🚂 Mexican Train 🚂</title>
+<style>
+  :root {
+    --bg: #e8edf5;
+    --surface: #f4f7fb;
+    --card: #dbe3f0;
+    --accent: #c0392b;
+    --accent2: #d4820a;
+    --text: #1e2a3a;
+    --text-dim: #5a6a80;
+    --border: #b8c4d8;
+    --tile-bg: #cdd6e8;
+    --input-bg: #ffffff;
+    --win: #1a7a4a;
+    --active-round: #c0392b;
+    --radius: 8px;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Segoe UI', system-ui, sans-serif;
+    min-height: 100vh;
+    padding: 16px 8px 40px;
+  }
+
+  header {
+    text-align: center;
+    margin-bottom: 16px;
+  }
+
+  header h1 {
+    font-size: 1.55rem;
+    font-weight: 800;
+    letter-spacing: 0.03em;
+    color: var(--text);
+  }
+
+  header p {
+    font-size: 0.78rem;
+    color: var(--text-dim);
+    margin-top: 4px;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+  }
+
+  .deco {
+    display: flex;
+    justify-content: center;
+    gap: 6px;
+    margin: 10px 0 14px;
+  }
+  .domino {
+    width: 28px;
+    height: 14px;
+    border: 1.5px solid var(--accent);
+    border-radius: 3px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.55rem;
+    color: var(--accent);
+    font-weight: 700;
+  }
+
+  /* Manche active banner */
+  .round-banner {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    background: var(--surface);
+    border: 1.5px solid var(--border);
+    border-radius: var(--radius);
+    padding: 9px 14px;
+    margin-bottom: 12px;
+    cursor: pointer;
+    user-select: none;
+    transition: background 0.15s;
+  }
+  .round-banner:hover { background: var(--card); }
+  .round-banner-label {
+    font-size: 0.78rem;
+    color: var(--text-dim);
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+  .round-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--active-round);
+    color: #fff;
+    font-weight: 800;
+    font-size: 1rem;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+  }
+  .round-banner-hint {
+    font-size: 0.72rem;
+    color: var(--text-dim);
+  }
+
+  /* Controls */
+  .controls {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 12px;
+    flex-wrap: wrap;
+  }
+
+  button {
+    border: none;
+    border-radius: var(--radius);
+    font-size: 0.82rem;
+    font-weight: 600;
+    cursor: pointer;
+    padding: 9px 14px;
+    transition: opacity 0.15s, transform 0.1s;
+    letter-spacing: 0.02em;
+  }
+  button:active { transform: scale(0.96); }
+
+  .btn-add {
+    background: var(--accent);
+    color: #fff;
+    flex: 1;
+  }
+  .btn-reset {
+    background: var(--card);
+    color: var(--text-dim);
+    border: 1px solid var(--border);
+    flex: 1;
+  }
+  .btn-reset:hover { color: var(--accent); border-color: var(--accent); }
+
+  /* Table wrapper */
+  .table-wrap {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    border-radius: var(--radius);
+    border: 1px solid var(--border);
+  }
+
+  table {
+    border-collapse: collapse;
+    width: 100%;
+    min-width: 660px;
+    background: var(--surface);
+  }
+
+  thead tr { background: var(--card); }
+
+  th {
+    padding: 9px 5px;
+    font-size: 0.72rem;
+    font-weight: 700;
+    text-align: center;
+    color: var(--text-dim);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    border-bottom: 2px solid var(--border);
+    white-space: nowrap;
+  }
+
+  th.col-rank { min-width: 28px; color: var(--text-dim); }
+  th.col-name { text-align: left; padding-left: 8px; min-width: 85px; color: var(--text); }
+  th.col-total { color: var(--accent2); }
+  th.col-move { min-width: 28px; }
+  th.round-header { min-width: 36px; }
+
+  th.round-header .chip {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    background: var(--tile-bg);
+    border: 1.5px solid var(--border);
+    font-size: 0.7rem;
+    font-weight: 800;
+    color: var(--text);
+    transition: background 0.2s, color 0.2s, border-color 0.2s;
+  }
+
+  th.round-header.active-col .chip {
+    background: var(--active-round);
+    color: #fff;
+    border-color: var(--active-round);
+  }
+
+  tr.player-row {
+    border-bottom: 1px solid var(--border);
+    transition: background 0.15s;
+  }
+  tr.player-row:hover { background: var(--tile-bg); }
+
+  td {
+    padding: 4px 3px;
+    text-align: center;
+    vertical-align: middle;
+  }
+
+  /* Rank cell */
+  td.col-rank {
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: var(--text-dim);
+    padding-left: 6px;
+    min-width: 24px;
+  }
+  td.col-rank.rank-1 { color: #c89b00; font-size: 1rem; }
+  td.col-rank.rank-2 { color: #888; font-size: 0.85rem; }
+  td.col-rank.rank-3 { color: #a0522d; font-size: 0.85rem; }
+
+  td.col-name { text-align: left; padding-left: 6px; }
+
+  .player-name {
+    background: none;
+    border: none;
+    color: var(--text);
+    font-size: 0.88rem;
+    font-weight: 600;
+    width: 100%;
+    min-width: 70px;
+    cursor: text;
+    padding: 4px 5px;
+    border-radius: 4px;
+    outline: none;
+    transition: background 0.15s;
+  }
+  .player-name:focus {
+    background: var(--input-bg);
+    outline: 1.5px solid var(--accent);
+  }
+
+  .score-input {
+    background: none;
+    border: none;
+    color: var(--text);
+    font-size: 0.88rem;
+    font-weight: 500;
+    width: 34px;
+    text-align: center;
+    padding: 6px 2px;
+    border-radius: 4px;
+    outline: none;
+    -moz-appearance: textfield;
+    transition: background 0.15s;
+  }
+  .score-input::-webkit-inner-spin-button,
+  .score-input::-webkit-outer-spin-button { -webkit-appearance: none; }
+  .score-input:focus {
+    background: var(--input-bg);
+    outline: 1.5px solid var(--accent);
+  }
+  .score-input::placeholder { color: var(--border); }
+
+  /* Active column highlight */
+  td.active-col-cell {
+    background: rgba(192,57,43,0.07);
+  }
+
+  td.col-total {
+    font-weight: 800;
+    font-size: 0.95rem;
+    color: var(--accent2);
+    min-width: 44px;
+  }
+
+  td.col-del, td.col-move { padding: 2px 4px; }
+
+  .btn-del {
+    background: none;
+    border: none;
+    color: var(--border);
+    font-size: 1rem;
+    cursor: pointer;
+    padding: 4px 5px;
+    border-radius: 4px;
+    line-height: 1;
+    transition: color 0.15s;
+  }
+  .btn-del:hover { color: var(--accent); }
+
+  /* Move buttons */
+  .move-btns {
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+  }
+  .btn-move {
+    background: none;
+    border: none;
+    color: var(--border);
+    font-size: 0.7rem;
+    cursor: pointer;
+    padding: 1px 5px;
+    border-radius: 3px;
+    line-height: 1.2;
+    transition: color 0.15s;
+  }
+  .btn-move:hover { color: var(--accent); }
+
+  /* Winner */
+  tr.winner td.col-total { color: var(--win); }
+  tr.winner .player-name { color: var(--win); }
+
+  /* Score flash animation */
+  @keyframes scoreFlash {
+    0%   { background: rgba(192,57,43,0.25); transform: scale(1.18); }
+    60%  { background: rgba(192,57,43,0.1); }
+    100% { background: none; transform: scale(1); }
+  }
+  .score-flash {
+    animation: scoreFlash 0.5s ease-out forwards;
+  }
+
+  /* Best score animation */
+  @keyframes bestPulse {
+    0%   { box-shadow: 0 0 0 0 rgba(26,122,74,0.5); }
+    60%  { box-shadow: 0 0 0 8px rgba(26,122,74,0); }
+    100% { box-shadow: none; }
+  }
+  tr.best-flash { animation: bestPulse 0.7s ease-out; }
+
+  .hint {
+    text-align: center;
+    font-size: 0.72rem;
+    color: var(--text-dim);
+    margin-top: 10px;
+  }
+
+  /* Dialog */
+  .overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.35);
+    z-index: 100;
+    align-items: center;
+    justify-content: center;
+  }
+  .overlay.show { display: flex; }
+  .dialog {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 24px 20px;
+    max-width: 300px;
+    width: 90%;
+    text-align: center;
+  }
+  .dialog p { font-size: 0.95rem; margin-bottom: 18px; line-height: 1.5; }
+  .dialog p strong { color: var(--accent); }
+  .dialog-btns { display: flex; gap: 10px; }
+  .dialog-btns button { flex: 1; padding: 10px; }
+  .btn-confirm { background: var(--accent); color: #fff; }
+  .btn-cancel { background: var(--card); color: var(--text-dim); border: 1px solid var(--border); }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>🚂 Mexican Train 🚂</h1>
+  <p>Feuille de pointage</p>
+  <div class="deco">
+    <div class="domino">12</div>
+    <div class="domino">11</div>
+    <div class="domino">10</div>
+    <div class="domino">·</div>
+    <div class="domino">0</div>
+  </div>
+</header>
+
+<!-- Manche active -->
+<div class="round-banner" id="roundBanner" onclick="advanceRound()" title="Cliquer pour passer à la manche suivante">
+  <span class="round-banner-label">Manche active</span>
+  <span class="round-badge" id="roundBadge">12</span>
+  <span class="round-banner-hint">→ toucher pour avancer</span>
+</div>
+
+<div class="controls">
+  <button class="btn-add" onclick="addPlayer()">＋ Ajouter un joueur</button>
+  <button class="btn-reset" onclick="confirmReset()">↺ Réinitialiser</button>
+</div>
+
+<div class="table-wrap">
+  <table id="scoreTable">
+    <thead>
+      <tr>
+        <th class="col-rank">#</th>
+        <th class="col-name">Nom</th>
+        <!-- rounds inserted by JS -->
+        <th class="col-total">Total</th>
+        <th class="col-move"></th>
+        <th></th>
+      </tr>
+    </thead>
+    <tbody id="tbody"></tbody>
+  </table>
+</div>
+
+<p class="hint">Toucher un nom pour renommer · Toucher la manche pour avancer · ↑↓ pour réordonner</p>
+
+<div class="overlay" id="overlay">
+  <div class="dialog">
+    <p>Réinitialiser <strong>tous les scores</strong> ?<br>Les noms des joueurs seront conservés.</p>
+    <div class="dialog-btns">
+      <button class="btn-cancel" onclick="closeDialog()">Annuler</button>
+      <button class="btn-confirm" onclick="doReset()">Réinitialiser</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  const ROUNDS = Array.from({length: 13}, (_, i) => 12 - i); // [12..0]
+  let players = [];
+  let nextId = 1;
+  let activeRoundIdx = 0; // index into ROUNDS array (0 = manche 12)
+
+  // Previous totals for animation detection
+  const prevTotals = {};
+
+  // Build thead
+  const headerRow = document.querySelector('#scoreTable thead tr');
+  const totalTh = headerRow.querySelector('.col-total');
+  ROUNDS.forEach((r, idx) => {
+    const th = document.createElement('th');
+    th.className = 'round-header';
+    th.id = `th-round-${idx}`;
+    th.innerHTML = `<span class="chip">${r}</span>`;
+    headerRow.insertBefore(th, totalTh);
+  });
+
+  function updateActiveRoundUI() {
+    const val = ROUNDS[activeRoundIdx];
+    document.getElementById('roundBadge').textContent = val;
+    // Update header chips
+    ROUNDS.forEach((r, idx) => {
+      const th = document.getElementById(`th-round-${idx}`);
+      if (th) th.classList.toggle('active-col', idx === activeRoundIdx);
+    });
+    // Update cell highlights
+    document.querySelectorAll('.active-col-cell').forEach(td => td.classList.remove('active-col-cell'));
+    document.querySelectorAll(`.score-cell-${activeRoundIdx}`).forEach(td => td.classList.add('active-col-cell'));
+  }
+
+  function advanceRound() {
+    if (activeRoundIdx < ROUNDS.length - 1) {
+      activeRoundIdx++;
+    } else {
+      activeRoundIdx = 0;
+    }
+    updateActiveRoundUI();
+    save();
+  }
+
+  function addPlayer(name = '') {
+    const id = nextId++;
+    const player = { id, name: name || `Joueur ${id}`, scores: Array(13).fill('') };
+    players.push(player);
+    prevTotals[id] = 0;
+    renderRow(player);
+    updateRankCells();
+    save();
+  }
+
+  function renderRow(player) {
+    const tbody = document.getElementById('tbody');
+    const tr = document.createElement('tr');
+    tr.className = 'player-row';
+    tr.id = `row-${player.id}`;
+
+    // Rank cell
+    const tdRank = document.createElement('td');
+    tdRank.className = 'col-rank';
+    tdRank.id = `rank-${player.id}`;
+    tdRank.textContent = '—';
+    tr.appendChild(tdRank);
+
+    // Name cell
+    const tdName = document.createElement('td');
+    tdName.className = 'col-name';
+    const nameInput = document.createElement('input');
+    nameInput.type = 'text';
+    nameInput.className = 'player-name';
+    nameInput.value = player.name;
+    nameInput.placeholder = 'Nom';
+    nameInput.addEventListener('input', () => { player.name = nameInput.value; save(); });
+    tdName.appendChild(nameInput);
+    tr.appendChild(tdName);
+
+    // Score cells
+    ROUNDS.forEach((r, idx) => {
+      const td = document.createElement('td');
+      td.className = `score-cell-${idx}`;
+      if (idx === activeRoundIdx) td.classList.add('active-col-cell');
+      const inp = document.createElement('input');
+      inp.type = 'number';
+      inp.className = 'score-input';
+      inp.min = 0;
+      inp.placeholder = '·';
+      inp.value = player.scores[idx] !== '' ? player.scores[idx] : '';
+      inp.addEventListener('input', () => {
+        player.scores[idx] = inp.value === '' ? '' : parseInt(inp.value) || 0;
+        inp.parentElement.classList.add('score-flash');
+        setTimeout(() => inp.parentElement.classList.remove('score-flash'), 500);
+        updateTotal(player);
+        save();
+      });
+      td.appendChild(inp);
+      tr.appendChild(td);
+    });
+
+    // Total cell
+    const tdTotal = document.createElement('td');
+    tdTotal.className = 'col-total';
+    tdTotal.id = `total-${player.id}`;
+    tdTotal.textContent = '0';
+    tr.appendChild(tdTotal);
+
+    // Move buttons
+    const tdMove = document.createElement('td');
+    tdMove.className = 'col-move';
+    const movDiv = document.createElement('div');
+    movDiv.className = 'move-btns';
+    const btnUp = document.createElement('button');
+    btnUp.className = 'btn-move';
+    btnUp.textContent = '▲';
+    btnUp.title = 'Monter';
+    btnUp.addEventListener('click', () => movePlayer(player.id, -1));
+    const btnDn = document.createElement('button');
+    btnDn.className = 'btn-move';
+    btnDn.textContent = '▼';
+    btnDn.title = 'Descendre';
+    btnDn.addEventListener('click', () => movePlayer(player.id, 1));
+    movDiv.appendChild(btnUp);
+    movDiv.appendChild(btnDn);
+    tdMove.appendChild(movDiv);
+    tr.appendChild(tdMove);
+
+    // Delete button
+    const tdDel = document.createElement('td');
+    tdDel.className = 'col-del';
+    const btnDel = document.createElement('button');
+    btnDel.className = 'btn-del';
+    btnDel.title = 'Supprimer';
+    btnDel.textContent = '✕';
+    btnDel.addEventListener('click', () => removePlayer(player.id));
+    tdDel.appendChild(btnDel);
+    tr.appendChild(tdDel);
+
+    tbody.appendChild(tr);
+    updateTotal(player);
+  }
+
+  function getTotal(player) {
+    return player.scores.reduce((sum, v) => sum + (v !== '' ? Number(v) : 0), 0);
+  }
+
+  function updateTotal(player) {
+    const total = getTotal(player);
+    const cell = document.getElementById(`total-${player.id}`);
+    if (cell) {
+      const prev = prevTotals[player.id] || 0;
+      cell.textContent = total;
+      // Animate if new best (lower total when they had scores before)
+      if (prev > 0 && total < prev) {
+        const row = document.getElementById(`row-${player.id}`);
+        if (row) {
+          row.classList.remove('best-flash');
+          void row.offsetWidth; // reflow
+          row.classList.add('best-flash');
+          setTimeout(() => row.classList.remove('best-flash'), 700);
+        }
+      }
+      prevTotals[player.id] = total;
+    }
+    highlightWinner();
+    updateRankCells();
+  }
+
+  function highlightWinner() {
+    if (players.length < 2) return;
+    const totals = players.map(p => getTotal(p));
+    const hasScores = totals.some(t => t > 0);
+    const min = Math.min(...totals);
+    players.forEach((p, i) => {
+      const row = document.getElementById(`row-${p.id}`);
+      if (row) row.classList.toggle('winner', hasScores && totals[i] === min);
+    });
+  }
+
+  function updateRankCells() {
+    if (players.length === 0) return;
+    const totals = players.map(p => ({ id: p.id, total: getTotal(p) }));
+    const hasScores = totals.some(t => t.total > 0);
+    if (!hasScores) {
+      players.forEach(p => {
+        const cell = document.getElementById(`rank-${p.id}`);
+        if (cell) { cell.textContent = '—'; cell.className = 'col-rank'; }
+      });
+      return;
+    }
+    // Sort by total ascending to assign ranks
+    const sorted = [...totals].sort((a, b) => a.total - b.total);
+    totals.forEach(({ id, total }) => {
+      const rank = sorted.findIndex(s => s.id === id) + 1;
+      const cell = document.getElementById(`rank-${id}`);
+      if (!cell) return;
+      cell.className = 'col-rank' + (rank <= 3 ? ` rank-${rank}` : '');
+      if (rank === 1) cell.textContent = '🥇';
+      else if (rank === 2) cell.textContent = '🥈';
+      else if (rank === 3) cell.textContent = '🥉';
+      else cell.textContent = rank;
+    });
+  }
+
+  function movePlayer(id, dir) {
+    const idx = players.findIndex(p => p.id === id);
+    const newIdx = idx + dir;
+    if (newIdx < 0 || newIdx >= players.length) return;
+    [players[idx], players[newIdx]] = [players[newIdx], players[idx]];
+    rebuildTable();
+    save();
+  }
+
+  function rebuildTable() {
+    const tbody = document.getElementById('tbody');
+    tbody.innerHTML = '';
+    players.forEach(p => renderRow(p));
+    updateRankCells();
+  }
+
+  function removePlayer(id) {
+    players = players.filter(p => p.id !== id);
+    const row = document.getElementById(`row-${id}`);
+    if (row) row.remove();
+    save();
+    highlightWinner();
+    updateRankCells();
+  }
+
+  function confirmReset() { document.getElementById('overlay').classList.add('show'); }
+  function closeDialog() { document.getElementById('overlay').classList.remove('show'); }
+
+  function doReset() {
+    closeDialog();
+    activeRoundIdx = 0;
+    players.forEach(player => {
+      player.scores = Array(13).fill('');
+      prevTotals[player.id] = 0;
+      const row = document.getElementById(`row-${player.id}`);
+      if (row) {
+        row.querySelectorAll('.score-input').forEach(inp => inp.value = '');
+        row.classList.remove('winner', 'best-flash');
+        const totalCell = document.getElementById(`total-${player.id}`);
+        if (totalCell) totalCell.textContent = '0';
+      }
+    });
+    updateActiveRoundUI();
+    updateRankCells();
+    save();
+  }
+
+  function save() {
+    localStorage.setItem('mt_players', JSON.stringify(players));
+    localStorage.setItem('mt_nextId', nextId);
+    localStorage.setItem('mt_round', activeRoundIdx);
+  }
+
+  function load() {
+    try {
+      const saved = localStorage.getItem('mt_players');
+      const savedId = localStorage.getItem('mt_nextId');
+      const savedRound = localStorage.getItem('mt_round');
+      if (savedRound !== null) activeRoundIdx = parseInt(savedRound);
+      if (saved) {
+        const data = JSON.parse(saved);
+        nextId = savedId ? parseInt(savedId) : data.length + 1;
+        data.forEach(p => {
+          players.push(p);
+          prevTotals[p.id] = p.scores.reduce((s, v) => s + (v !== '' ? Number(v) : 0), 0);
+          renderRow(p);
+        });
+      }
+    } catch(e) {}
+    if (players.length === 0) {
+      addPlayer('Joueur 1');
+      addPlayer('Joueur 2');
+    }
+    updateActiveRoundUI();
+    updateRankCells();
+  }
+
+  load();
+</script>
+</body>
+</html>
