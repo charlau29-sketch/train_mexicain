@@ -42,6 +42,10 @@
     letter-spacing: 0.03em;
     color: var(--text);
   }
+  .train-mirror {
+    display: inline-block;
+    transform: scaleX(-1);
+  }
 
   header p {
     font-size: 0.78rem;
@@ -70,7 +74,6 @@
     font-weight: 700;
   }
 
-  /* Manche active banner */
   .round-banner {
     display: flex;
     align-items: center;
@@ -81,11 +84,8 @@
     border-radius: var(--radius);
     padding: 9px 14px;
     margin-bottom: 12px;
-    cursor: pointer;
     user-select: none;
-    transition: background 0.15s;
   }
-  .round-banner:hover { background: var(--card); }
   .round-banner-label {
     font-size: 0.78rem;
     color: var(--text-dim);
@@ -105,10 +105,18 @@
     height: 32px;
     border-radius: 50%;
   }
-  .round-banner-hint {
-    font-size: 0.72rem;
-    color: var(--text-dim);
+  .btn-round-nav {
+    background: var(--card);
+    border: 1px solid var(--border);
+    color: var(--text);
+    font-size: 0.85rem;
+    font-weight: 700;
+    padding: 5px 11px;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: background 0.15s, color 0.15s;
   }
+  .btn-round-nav:hover { background: var(--accent); color: #fff; border-color: var(--accent); }
 
   /* Controls */
   .controls {
@@ -372,7 +380,7 @@
 <body>
 
 <header>
-  <h1>🚂 Mexican Train 🚂</h1>
+  <h1>🚂 Mexican Train <span class="train-mirror">🚂</span></h1>
   <p>Feuille de pointage</p>
   <div class="deco">
     <div class="domino">12</div>
@@ -384,10 +392,11 @@
 </header>
 
 <!-- Manche active -->
-<div class="round-banner" id="roundBanner" onclick="advanceRound()" title="Cliquer pour passer à la manche suivante">
+<div class="round-banner" id="roundBanner">
   <span class="round-banner-label">Manche active</span>
+  <button class="btn-round-nav" onclick="retreatRound()" title="Manche précédente">◀</button>
   <span class="round-badge" id="roundBadge">12</span>
-  <span class="round-banner-hint">→ toucher pour avancer</span>
+  <button class="btn-round-nav" onclick="advanceRound()" title="Manche suivante">▶</button>
 </div>
 
 <div class="controls">
@@ -399,6 +408,7 @@
   <table id="scoreTable">
     <thead>
       <tr>
+        <th></th>
         <th class="col-rank">#</th>
         <th class="col-name">Nom</th>
         <!-- rounds inserted by JS -->
@@ -411,7 +421,7 @@
   </table>
 </div>
 
-<p class="hint">Toucher un nom pour renommer · Toucher la manche pour avancer · ↑↓ pour réordonner</p>
+<p class="hint">Toucher un nom pour renommer · ◀ ▶ pour changer de manche · ▲▼ pour réordonner</p>
 
 <div class="overlay" id="overlay">
   <div class="dialog">
@@ -456,6 +466,12 @@
     document.querySelectorAll(`.score-cell-${activeRoundIdx}`).forEach(td => td.classList.add('active-col-cell'));
   }
 
+  function retreatRound() {
+    if (activeRoundIdx > 0) activeRoundIdx--;
+    updateActiveRoundUI();
+    save();
+  }
+
   function advanceRound() {
     if (activeRoundIdx < ROUNDS.length - 1) {
       activeRoundIdx++;
@@ -481,6 +497,17 @@
     const tr = document.createElement('tr');
     tr.className = 'player-row';
     tr.id = `row-${player.id}`;
+
+    // Delete button — FIRST column (always visible on mobile)
+    const tdDel = document.createElement('td');
+    tdDel.className = 'col-del';
+    const btnDel = document.createElement('button');
+    btnDel.className = 'btn-del';
+    btnDel.title = 'Supprimer';
+    btnDel.textContent = '✕';
+    btnDel.addEventListener('click', () => removePlayer(player.id));
+    tdDel.appendChild(btnDel);
+    tr.appendChild(tdDel);
 
     // Rank cell
     const tdRank = document.createElement('td');
@@ -549,17 +576,6 @@
     movDiv.appendChild(btnDn);
     tdMove.appendChild(movDiv);
     tr.appendChild(tdMove);
-
-    // Delete button
-    const tdDel = document.createElement('td');
-    tdDel.className = 'col-del';
-    const btnDel = document.createElement('button');
-    btnDel.className = 'btn-del';
-    btnDel.title = 'Supprimer';
-    btnDel.textContent = '✕';
-    btnDel.addEventListener('click', () => removePlayer(player.id));
-    tdDel.appendChild(btnDel);
-    tr.appendChild(tdDel);
 
     tbody.appendChild(tr);
     updateTotal(player);
